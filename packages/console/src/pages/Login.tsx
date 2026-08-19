@@ -27,7 +27,7 @@ export default function LoginPage() {
       const session = await loginMut.mutateAsync({ phone: loginPhone, password: loginPass });
       storeSession(session);
       setUser(session.user);
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Authentication failed. Please verify credentials.');
     } finally {
@@ -171,10 +171,18 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Confidential footer note */}
-        <p className="text-center text-slate-600 text-[11px] font-mono mt-4">
-          AUTHORIZED PERSONNEL ONLY • BENUE STATE HOMELAND SECURITY
-        </p>
+        {/* Confidential footer note & link to public portal */}
+        <div className="mt-4 text-center space-y-1">
+          <p className="text-slate-600 text-[11px] font-mono">
+            AUTHORIZED PERSONNEL ONLY • BENUE STATE HOMELAND SECURITY
+          </p>
+          <a
+            href="/"
+            className="inline-block text-[11px] font-mono text-orange-400/80 hover:text-orange-300 transition-colors"
+          >
+            ← Return to Public Early Warning Portal
+          </a>
+        </div>
       </div>
     </div>
   );

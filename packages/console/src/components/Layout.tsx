@@ -5,7 +5,7 @@ import { useAlarmStore } from '../store/alarms';
 import AlarmTicker from './AlarmTicker';
 
 const navItems = [
-  { to: '/', label: 'Operations HUD', icon: '📊', end: true },
+  { to: '/app', label: 'Operations HUD', icon: '📊', end: true },
   { to: '/c2', label: 'C2 Video Wall', icon: '🖥️' },
   { to: '/map', label: 'Live Radar Map', icon: '🗺️' },
   { to: '/triage', label: 'Triage Queue', icon: '📋' },
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/playbook', label: 'Playbook Engine', icon: '⚡' },
   { to: '/responders', label: 'Force Readiness', icon: '🛡️' },
   { to: '/analytics', label: 'Situation Reports', icon: '📈' },
+  { to: '/', label: 'Public Portal ↗', icon: '🌐' },
 ];
 
 export default function Layout() {

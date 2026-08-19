@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/auth';
 import { useRealtime } from './api/realtime';
 import Layout from './components/Layout';
+import PublicPortal from './pages/PublicPortal';
 import LoginPage from './pages/Login';
 import OperationsDashboard from './pages/OperationsDashboard';
 import LiveMapPage from './pages/LiveMap';
@@ -33,14 +34,20 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
+      {/* Public Landing & Citizen Early Warning Portal */}
+      <Route path="/" element={<PublicPortal />} />
+      <Route path="/portal" element={<PublicPortal />} />
+
+      {/* Operator Authentication */}
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/app" replace /> : <LoginPage />} />
 
       {/* Full-screen C2 Video Wall — no sidebar layout */}
       <Route path="/c2" element={<ProtectedRoute><C2VideoWall /></ProtectedRoute>} />
       <Route path="/monitor" element={<ProtectedRoute><SituationMonitor /></ProtectedRoute>} />
 
+      {/* Authenticated C2 Situation Room Console */}
       <Route element={<ProtectedLayout />}>
-        <Route path="/" element={<OperationsDashboard />} />
+        <Route path="/app" element={<OperationsDashboard />} />
         <Route path="/map" element={<LiveMapPage />} />
         <Route path="/intel" element={<IntelligenceFeed />} />
         <Route path="/triage" element={<TriagePage />} />
