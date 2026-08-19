@@ -403,6 +403,19 @@ async function seedSampleIncidents() {
 
 async function main() {
   console.log('\n🌱 CEWERS Database Seed\n' + '='.repeat(40));
+
+  // Allow Prisma to insert rows before setting raw PostGIS coordinates
+  try {
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Lga" ALTER COLUMN "centroid" DROP NOT NULL;
+      ALTER TABLE "Ward" ALTER COLUMN "centroid" DROP NOT NULL;
+      ALTER TABLE "MiniCommandCentre" ALTER COLUMN "location" DROP NOT NULL;
+      ALTER TABLE "Incident" ALTER COLUMN "geo" DROP NOT NULL;
+    `);
+  } catch (err) {
+    // Ignore if already dropped
+  }
+
   await seedLgas();
   await seedWards();
   await seedSops();
