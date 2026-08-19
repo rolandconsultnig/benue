@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "CEWERS",
+    "slug": "cewers-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "cewers",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#1A2330",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ng.gov.benue.cewers",
+      "infoPlist": {
+        "NSCameraUsageDescription": "CEWERS needs camera access to capture photo evidence of incidents.",
+        "NSLocationWhenInUseUsageDescription": "CEWERS needs your location to tag incident reports for rapid response."
+      }
+    },
+    "android": {
+      "package": "ng.gov.benue.cewers",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      "expo-location",
+      "expo-image-picker"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "cewers-mobile"
+      }
+    }
+  }
+}

@@ -1,0 +1,487 @@
+// ============================================================
+// CEWERS Prisma Schema — Benue South
+// Database: PostgreSQL 16 + PostGIS 3.4
+// ============================================================
+//
+// PostGIS note: Prisma does not natively model `geography(Point,4326)`.
+// We declare these columns as `Unsupported("geography(Point,4326)")` so
+// Prisma manages all other fields, and we interact with geo columns via
+// raw SQL (prisma.$queryRaw) using ST_SetSRID(ST_MakePoint(lng,lat),4326)
+// and ST_DWithin / ST_Within for spatial queries.
+// The first migration includes a raw SQL extension + column definitions.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums (mirror packages/shared/src/types/enums.ts) ────────────────────────
+
+enum Role {
+  CITIZEN
+  CFP
+  OPERATOR
+  ANALYST
+  COMMANDER
+  ADMIN
+}
+
+enum Agency {
+  NPF
+  DSS
+  NSCDC
+  ARMY_OPWS
+  SEMA
+  NEMA
+  VIGILANTE
+  FIRE_SERVICE
+  FRSC
+  HEALTH
+  OTHER
+}
+
+enum Channel {
+  APP
+  USSD
+  SMS
+  VOICE
+  PANIC
+}
+
+enum IncidentCategory {
+  ARMED_GROUP_MOVEMENT
+  SUSPICIOUS_GATHERING
+  THREATS_INCITEMENT
+  CROP_DESTRUCTION
+  LAND_BOUNDARY_DISPUTE
+  KIDNAPPING
+  ATTACK_IN_PROGRESS
+  DISPLACEMENT
+  CATTLE_RUSTLING
+  HIGHWAY_ROBBERY
+  MISSING_PERSON
+  SUSPICIOUS_STRANGERS
+  WEAPON_SIGHTING
+  GBV
+  RUMOUR_VERIFICATION
+}
+
+enum IncidentStatus {
+  PENDING
+  IN_TRIAGE
+  DISPATCHED
+  ON_SCENE
+  RESOLVED
+  CLOSED
+  DISMISSED
+}
+
+enum Priority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum Credibility {
+  A
+  B
+  C
+  D
+}
+
+enum IncidentEventType {
+  CREATED
+  TRIAGED
+  VERIFIED
+  DISPATCHED
+  EN_ROUTE
+  ON_SCENE
+  UPDATED
+  NOTE_ADDED
+  MEDIA_ATTACHED
+  RESOLVED
+  CLOSED
+  DISMISSED
+  REOPENED
+  ESCALATED
+}
+
+enum AlertLevel {
+  GREEN
+  YELLOW
+  ORANGE
+  RED
+}
+
+enum EwiGroup {
+  STRUCTURAL
+  PROXIMATE
+  ACUTE
+}
+
+enum EwiIndicatorType {
+  // Structural
+  RAINFALL_DEFICIT
+  CROP_FAILURE
+  CATTLE_ROUTE_ENCROACHMENT
+  CONFLICT_RECURRENCE
+  ARMS_AVAILABILITY
+  // Proximate
+  UNUSUAL_CATTLE_MOVEMENT
+  THREAT_MESSAGES
+  WATER_DISPUTE
+  RETALIATION_CYCLE
+  MARKET_SCHOOL_CLOSURE
+  NIGHT_FOREST_MOVEMENT
+  // Acute
+  ARMED_ASSEMBLY
+  ATTACK_RECON
+  MASS_PANIC
+  COMMS_BLACKOUT
+}
+
+enum ResponderType {
+  PATROL
+  QRF
+  MEDIC
+  FIRE
+  VIGILANTE_TEAM
+  PEACE_COMMITTEE
+}
+
+enum ResponderStatus {
+  AVAILABLE
+  DISPATCHED
+  ON_SCENE
+  RETURNING
+  OFF_DUTY
+}
+
+enum VehicleType {
+  PATROL_VEHICLE
+  MOTORCYCLE
+  BOAT
+  AMBULANCE
+}
+
+enum ResponseTier {
+  TIER_1_LOCAL
+  TIER_2_LGA
+  TIER_3_STATE
+  TIER_4_FEDERAL
+}
+
+enum ResponseModality {
+  KINETIC
+  MEDIATION
+  HUMANITARIAN
+  PUBLIC_ALERT
+  COUNTER_INFO
+}
+
+enum VehicleStatus {
+  ACTIVE
+  MAINTENANCE
+  DECOMMISSIONED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+// ─── Geography ────────────────────────────────────────────────────────────────
+
+model Lga {
+  id        String   @id @default(cuid())
+  code      String   @unique // ADO, AGATU, ...
+  name      String   @unique
+  capital   String
+  state     String   @default("Benue")
+  populationEstimate Int?
+  centroid  Unsupported("geography(Point,4326)")?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wards       Ward[]
+  incidents   Incident[]
+  responders  Responder[]
+  vehicles    Vehicle[]
+  users       User[]
+  miniCentres MiniCommandCentre?
+
+  @@index([code])
+}
+
+model Ward {
+  id        String   @id @default(cuid())
+  code      String   @unique // AGATU-04
+  name      String
+  lga       Lga      @relation(fields: [lgaId], references: [id], onDelete: Cascade)
+  lgaId     String
+  centroid  Unsupported("geography(Point,4326)")?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incidents  Incident[]
+  alerts     AlertState[]
+  indicators EwiIndicator[]
+
+  @@index([lgaId])
+}
+
+// ─── Identity ─────────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  phone        String     @unique
+  passwordHash String
+  name         String
+  role         Role       @default(CITIZEN)
+  agency       Agency?
+  lga          Lga?       @relation(fields: [lgaId], references: [id])
+  lgaId        String?
+  avatarUrl    String?
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  reportedIncidents  Incident[]     @relation("ReporterIncidents")
+  events             IncidentEvent[]
+  responders         Responder[]
+  auditLogs          AuditLog[]
+  refreshTokens      RefreshToken[]
+
+  @@index([role])
+  @@index([lgaId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Incidents ────────────────────────────────────────────────────────────────
+
+model Incident {
+  id           String   @id @default(cuid())
+  reference    String   @unique // CEW-2024-00001
+  category     IncidentCategory
+  status       IncidentStatus @default(PENDING)
+  priority     Priority @default(P3)
+  credibility  Credibility @default(C)
+  description  String
+  geo          Unsupported("geography(Point,4326)")?
+  channel      Channel
+
+  // Location taxonomy
+  lga     Lga    @relation(fields: [lgaId], references: [id])
+  lgaId   String
+  ward    Ward?  @relation(fields: [wardId], references: [id])
+  wardId  String?
+
+  // Reporter (null for anonymous)
+  reporter  User? @relation("ReporterIncidents", fields: [reporterId], references: [id])
+  reporterId String?
+
+  // Response assignment
+  assignedResponder  Responder? @relation("IncidentAssignedResponder", fields: [assignedResponderId], references: [id])
+  assignedResponderId String? @unique
+  responseTier       ResponseTier?
+  responseModality   ResponseModality?
+  responseSopCode    String? // Linked SOP code (SOP-01..)
+
+  // Timestamps for KPI computation
+  occurredAt  DateTime
+  createdAt   DateTime  @default(now())
+  dispatchedAt DateTime?
+  onSceneAt   DateTime?
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+
+  // Relations
+  events IncidentEvent[]
+  media  MediaAsset[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([lgaId])
+  @@index([wardId])
+  @@index([createdAt])
+  @@index([occurredAt])
+}
+
+model IncidentEvent {
+  id         String             @id @default(cuid())
+  incident   Incident           @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  incidentId String
+  type       IncidentEventType
+  note       String?
+  actor      User?              @relation(fields: [actorId], references: [id])
+  actorId    String?
+  actorName  String? // denormalised for audit trail even after user delete
+  metadata   Json?
+  createdAt  DateTime           @default(now())
+
+  @@index([incidentId])
+  @@index([type])
+}
+
+model MediaAsset {
+  id         String   @id @default(cuid())
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  incidentId String
+  type       MediaType
+  storageKey String // MinIO object key
+  url        String // presigned or public URL
+  geo        Unsupported("geography(Point,4326)")?
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+
+  @@index([incidentId])
+}
+
+// ─── Responders & Vehicles ────────────────────────────────────────────────────
+
+model Responder {
+  id        String          @id @default(cuid())
+  callsign  String          @unique // e.g. "AGATU-QRF-1"
+  agency    Agency
+  type      ResponderType
+  status    ResponderStatus @default(AVAILABLE)
+  geo       Unsupported("geography(Point,4326)")?
+  lga       Lga             @relation(fields: [lgaId], references: [id])
+  lgaId     String
+  vehicle   Vehicle?        @relation(fields: [vehicleId], references: [id])
+  vehicleId String?
+  user      User?           @relation(fields: [userId], references: [id])
+  userId    String?
+  currentIncident   Incident? @relation("IncidentAssignedResponder")
+  currentIncidentId String? @unique
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([lgaId])
+  @@index([status])
+  @@index([agency])
+}
+
+model Vehicle {
+  id        String        @id @default(cuid())
+  callsign  String        @unique
+  type      VehicleType
+  agency    Agency
+  lga       Lga           @relation(fields: [lgaId], references: [id])
+  lgaId     String
+  status    VehicleStatus @default(ACTIVE)
+  geo       Unsupported("geography(Point,4326)")?
+  responders Responder[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([lgaId])
+  @@index([status])
+}
+
+// ─── Alerts & EWI ─────────────────────────────────────────────────────────────
+
+model AlertState {
+  id        String     @id @default(cuid())
+  ward      Ward       @relation(fields: [wardId], references: [id], onDelete: Cascade)
+  wardId    String     @unique
+  level     AlertLevel @default(GREEN)
+  score     Int        @default(0) // 0-100
+  isOverridden Boolean @default(false)
+  overrideReason String?
+  contributingIndicators Json? // snapshot of active indicators at compute time
+  computedAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([level])
+}
+
+model EwiIndicator {
+  id         String           @id @default(cuid())
+  ward       Ward             @relation(fields: [wardId], references: [id], onDelete: Cascade)
+  wardId     String
+  type       EwiIndicatorType
+  group      EwiGroup
+  weight     Int // 0-100 contribution within its group
+  source     String // who/what reported this indicator
+  note       String?
+  isActive   Boolean  @default(true)
+  observedAt DateTime @default(now())
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([wardId])
+  @@index([type])
+  @@index([isActive])
+}
+
+// ─── Mini Command Centres ─────────────────────────────────────────────────────
+
+model MiniCommandCentre {
+  id        String   @id @default(cuid())
+  lga       Lga      @relation(fields: [lgaId], references: [id])
+  lgaId     String   @unique
+  name      String
+  location  Unsupported("geography(Point,4326)")?
+  contactPhone String?
+  contactEmail String?
+  isOperational Boolean @default(false)
+  commissionedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── SOPs ─────────────────────────────────────────────────────────────────────
+
+model Sop {
+  code            String   @id // SOP-01 .. SOP-15
+  title           String
+  triggers        IncidentCategory[]
+  defaultTier     ResponseTier
+  modalities      ResponseModality[]
+  leadAgency      Agency
+  supportAgencies Agency[]
+  steps           String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── Audit Log (immutable) ────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actorId    String?
+  actorName  String
+  action     String // e.g. "incident.dispatch"
+  entityType String // "Incident", "User", "AlertState"
+  entityId   String?
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

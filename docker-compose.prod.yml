@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # ─── Infrastructure ────────────────────────────────────────────────────────
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: cewers-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cewers_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-bescewers}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cewers-redis-prod
+    restart: always
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: cewers-minio-prod
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-cewers_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-cewers_minio_secret}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Application Services ──────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: api-runner
+    container_name: cewers-api-prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-cewers_secret}@postgres:5432/${POSTGRES_DB:-bescewers}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - S3_ENDPOINT=minio
+      - S3_PORT=9000
+      - S3_USE_SSL=false
+      - S3_ACCESS_KEY=${MINIO_ACCESS_KEY:-cewers_minio}
+      - S3_SECRET_KEY=${MINIO_SECRET_KEY:-cewers_minio_secret}
+      - S3_BUCKET=cewers-media
+      - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key}
+    ports:
+      - "4000:4000"
+
+  console:
+    build:
+      context: .
+      target: console-runner
+    container_name: cewers-console-prod
+    restart: always
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

@@ -1,0 +1,34 @@
+{
+  "name": "cewers",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Conflict Early Warning and Early Response System (CEWERS) - Benue South",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream run dev",
+    "dev:api": "pnpm --filter @cewers/api dev",
+    "dev:console": "pnpm --filter @cewers/console dev",
+    "dev:mobile": "pnpm --filter @cewers/mobile start",
+    "dev:ussd": "pnpm --filter @cewers/ussd dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @cewers/api prisma:migrate",
+    "db:seed": "pnpm --filter @cewers/api prisma:seed",
+    "db:reset": "pnpm --filter @cewers/api prisma:reset",
+    "db:studio": "pnpm --filter @cewers/api prisma:studio",
+    "setup": "pnpm install && pnpm db:up && pnpm db:migrate && pnpm db:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.2"
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@cewers/ussd",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CEWERS USSD/SMS gateway — Africa's Talking integration + local mock",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cewers/shared": "workspace:*",
+    "africastalking": "^0.8.3",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.16.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}

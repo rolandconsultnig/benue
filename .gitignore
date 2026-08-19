@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+.next/
+.expo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Prisma
+packages/api/prisma/migrations/dev.db*
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker
+docker-data/
+
+# Mobile
+packages/mobile/ios/
+packages/mobile/android/
+
+# Generated docs (keep the .docx proposal out of git; it's a build artifact)
+*.docx
