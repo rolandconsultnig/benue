@@ -16,7 +16,7 @@
  *   5. Confirmation → API submission
  */
 
-import { CATEGORIES, type IncidentCategory, type Channel, type CreateIncidentDto } from '@cewers/shared';
+import { CATEGORIES, Channel, type IncidentCategory, type CreateIncidentDto } from '@cewers/shared';
 
 // ─── Session state ────────────────────────────────────────────────────────────
 
@@ -196,7 +196,7 @@ export async function handleUssd(
           category: session.selectedCategory!,
           description: session.description!,
           geo: { lng: 8.05, lat: 7.2 }, // Default to Benue South centroid (USSD has no GPS)
-          channel: 'USSD' as any,
+          channel: Channel.USSD,
           anonymous: true, // USSD reports are anonymous by default
         };
         const result = await submitIncident(dto, body.phoneNumber);

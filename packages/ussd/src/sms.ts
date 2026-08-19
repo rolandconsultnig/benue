@@ -11,7 +11,12 @@
  *   "HELP"                   → returns usage instructions
  */
 
-import { CATEGORIES, type IncidentCategory, type Channel, type CreateIncidentDto } from '@cewers/shared';
+import {
+  CATEGORIES,
+  IncidentCategory,
+  Channel,
+  type CreateIncidentDto,
+} from '@cewers/shared';
 
 export interface SmsReport {
   phoneNumber: string;
@@ -34,18 +39,18 @@ CATEGORIES.forEach((c) => {
   });
 });
 // Add short aliases
-CATEGORY_KEYWORDS.set('GUNS', 'WEAPON_SIGHTING');
-CATEGORY_KEYWORDS.set('GUN', 'WEAPON_SIGHTING');
-CATEGORY_KEYWORDS.set('FIGHT', 'ATTACK_IN_PROGRESS');
-CATEGORY_KEYWORDS.set('RUSTLE', 'CATTLE_RUSTLING');
-CATEGORY_KEYWORDS.set('KIDNAP', 'KIDNAPPING');
-CATEGORY_KEYWORDS.set('ROBBERY', 'HIGHWAY_ROBBERY');
-CATEGORY_KEYWORDS.set('ROB', 'HIGHWAY_ROBBERY');
-CATEGORY_KEYWORDS.set('GRAZE', 'CROP_DESTRUCTION');
-CATEGORY_KEYWORDS.set('DISPUTE', 'LAND_BOUNDARY_DISPUTE');
-CATEGORY_KEYWORDS.set('MISSING', 'MISSING_PERSON');
-CATEGORY_KEYWORDS.set('STRANGER', 'SUSPICIOUS_STRANGERS');
-CATEGORY_KEYWORDS.set('RUMOUR', 'RUMOUR_VERIFICATION');
+CATEGORY_KEYWORDS.set('GUNS', IncidentCategory.WEAPON_SIGHTING);
+CATEGORY_KEYWORDS.set('GUN', IncidentCategory.WEAPON_SIGHTING);
+CATEGORY_KEYWORDS.set('FIGHT', IncidentCategory.ATTACK_IN_PROGRESS);
+CATEGORY_KEYWORDS.set('RUSTLE', IncidentCategory.CATTLE_RUSTLING);
+CATEGORY_KEYWORDS.set('KIDNAP', IncidentCategory.KIDNAPPING);
+CATEGORY_KEYWORDS.set('ROBBERY', IncidentCategory.HIGHWAY_ROBBERY);
+CATEGORY_KEYWORDS.set('ROB', IncidentCategory.HIGHWAY_ROBBERY);
+CATEGORY_KEYWORDS.set('GRAZE', IncidentCategory.CROP_DESTRUCTION);
+CATEGORY_KEYWORDS.set('DISPUTE', IncidentCategory.LAND_BOUNDARY_DISPUTE);
+CATEGORY_KEYWORDS.set('MISSING', IncidentCategory.MISSING_PERSON);
+CATEGORY_KEYWORDS.set('STRANGER', IncidentCategory.SUSPICIOUS_STRANGERS);
+CATEGORY_KEYWORDS.set('RUMOUR', IncidentCategory.RUMOUR_VERIFICATION);
 
 export function parseSms(phoneNumber: string, message: string): SmsReport {
   const report: SmsReport = { phoneNumber, message };
@@ -77,11 +82,12 @@ export function parseSms(phoneNumber: string, message: string): SmsReport {
 
   if (keyword && CATEGORY_KEYWORDS.has(keyword)) {
     report.category = CATEGORY_KEYWORDS.get(keyword);
-    report.description = parts.slice(keywordIdx + 1).join(' ') || `${CATEGORY_KEYWORDS.get(keyword)} reported`;
+    report.description =
+      parts.slice(keywordIdx + 1).join(' ') || `${CATEGORY_KEYWORDS.get(keyword)} reported`;
   } else {
     // No keyword recognised — treat whole message as description with generic category
     report.description = trimmed;
-    report.category = 'SUSPICIOUS_GATHERING';
+    report.category = IncidentCategory.SUSPICIOUS_GATHERING;
   }
 
   return report;
@@ -92,7 +98,7 @@ export function smsReportToDto(report: SmsReport): CreateIncidentDto {
     category: report.category!,
     description: report.description!,
     geo: { lng: 8.05, lat: 7.2 }, // Default centroid (SMS has no GPS)
-    channel: 'SMS' as any,
+    channel: Channel.SMS,
     anonymous: true,
   };
 }

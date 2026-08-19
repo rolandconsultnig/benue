@@ -11,7 +11,7 @@
  */
 
 import express from 'express';
-import type { CreateIncidentDto, Incident } from '@cewers/shared';
+import { IncidentCategory, Channel, type CreateIncidentDto, type Incident } from '@cewers/shared';
 import { handleUssd } from './menus.js';
 import { parseSms, smsReportToDto, buildHelpReply } from './sms.js';
 
@@ -102,10 +102,10 @@ app.post('/voice', async (req, res) => {
     console.log(`[VOICE] Received recording from ${callerNumber}: ${recordingUrl}`);
     try {
       const dto: CreateIncidentDto = {
-        category: 'SUSPICIOUS_GATHERING', // Default, triage will classify
+        category: IncidentCategory.SUSPICIOUS_GATHERING, // Default, triage will classify
         description: `Voice Report\nRecording: ${recordingUrl}`,
         geo: { lng: 8.05, lat: 7.2 }, // Default centroid
-        channel: 'VOICE' as any,
+        channel: Channel.VOICE,
         anonymous: true,
       };
       const result = await submitToApi(dto, callerNumber);
