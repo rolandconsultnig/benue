@@ -18,6 +18,7 @@ import { AlertsModule } from './modules/alerts/alerts.module';
 import { RespondersModule } from './modules/responders/responders.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SopsModule } from './modules/sops/sops.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SopsModule } from './modules/sops/sops.module';
     RespondersModule,
     AnalyticsModule,
     SopsModule,
+    MediaModule,
   ],
   controllers: [AppHealthController],
   providers: [

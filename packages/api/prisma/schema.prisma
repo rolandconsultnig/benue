@@ -343,16 +343,16 @@ model IncidentEvent {
 }
 
 model MediaAsset {
-  id         String   @id @default(cuid())
-  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  incidentId String
+  id         String    @id @default(cuid())
+  incident   Incident? @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  incidentId String?
   type       MediaType
   storageKey String // MinIO object key
   url        String // presigned or public URL
   geo        Unsupported("geography(Point,4326)")?
   mimeType   String
   sizeBytes  Int
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([incidentId])
 }

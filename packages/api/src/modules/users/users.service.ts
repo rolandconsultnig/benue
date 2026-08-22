@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma.service';
 import type { AuthUser } from '@cewers/shared';
 import type { Role } from '@cewers/shared';
+import { normalizePhone, getPhoneVariants } from '../../common/utils/phone';
 
 @Injectable()
 export class UsersService {
@@ -46,17 +47,26 @@ export class UsersService {
     agency?: string;
     lgaId?: string;
   }): Promise<AuthUser> {
-    const existing = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const rawPhone = dto.phone ? dto.phone.trim() : '';
+    const normalizedPhone = normalizePhone(rawPhone);
+    const variants = getPhoneVariants(rawPhone);
+
+    const existing = await this.prisma.user.findFirst({
+      where: { phone: { in: variants } },
+    });
     if (existing) throw new ConflictException('Phone already registered');
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const cleanPassword = dto.password ? dto.password.trim() : '';
+    const passwordHash = await bcrypt.hash(cleanPassword, 10);
     const u = await this.prisma.user.create({
       data: {
-        phone: dto.phone,
-        name: dto.name,
+        phone: normalizedPhone,
+        name: dto.name.trim(),
         passwordHash,
         role: dto.role,
-        agency: dto.agency as any,
-        lgaId: dto.lgaId,
+        agency: (dto.agency as any) || null,
+        lgaId: dto.lgaId || null,
+        isActive: true,
       },
       select: { id: true, phone: true, name: true, role: true, agency: true, lgaId: true, avatarUrl: true },
     });

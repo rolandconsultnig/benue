@@ -263,6 +263,14 @@ export enum ResponseModality {
   COUNTER_INFO = 'COUNTER_INFO',
 }
 
+// ─── Media ────────────────────────────────────────────────────────────────────
+
+export enum MediaType {
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+  AUDIO = 'AUDIO',
+}
+
 // ─── Geography ────────────────────────────────────────────────────────────────
 
 export enum State {

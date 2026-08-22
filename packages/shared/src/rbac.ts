@@ -16,6 +16,7 @@ export enum Capability {
   // Reporting
   REPORT_INCIDENT = 'REPORT_INCIDENT',
   VIEW_OWN_REPORTS = 'VIEW_OWN_REPORTS',
+  UPLOAD_MEDIA = 'UPLOAD_MEDIA',
   // Triage / verification
   TRIAGE_INCIDENT = 'TRIAGE_INCIDENT',
   VERIFY_INCIDENT = 'VERIFY_INCIDENT',
@@ -42,8 +43,8 @@ export enum Capability {
  * Resolve with resolveCapabilities() to get the full effective set.
  */
 const DIRECT_CAPABILITIES: Record<Role, Capability[]> = {
-  [Role.CITIZEN]: [Capability.REPORT_INCIDENT, Capability.VIEW_OWN_REPORTS],
-  [Role.CFP]: [Capability.REPORT_INCIDENT, Capability.VIEW_OWN_REPORTS, Capability.ADD_EWI_INDICATOR],
+  [Role.CITIZEN]: [Capability.REPORT_INCIDENT, Capability.VIEW_OWN_REPORTS, Capability.UPLOAD_MEDIA],
+  [Role.CFP]: [Capability.REPORT_INCIDENT, Capability.VIEW_OWN_REPORTS, Capability.ADD_EWI_INDICATOR, Capability.UPLOAD_MEDIA],
   [Role.OPERATOR]: [
     Capability.TRIAGE_INCIDENT,
     Capability.VERIFY_INCIDENT,

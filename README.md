@@ -104,8 +104,8 @@ The schema uses **PostGIS** for all geographic columns (`geography(Point, 4326)`
 ## Development status
 
 - ✅ **Phase 0** — Foundation: monorepo, Docker stack, Prisma schema, seed data
-- 🚧 **Phase 1** — Backend core: auth, incidents, lgas, alerts, realtime, media
-- ⬜ **Phase 2** — C2 Console: live map, triage queue, dispatch, analytics
+- ✅ **Phase 1** — Backend core: auth, incidents, lgas, alerts, realtime, media
+- 🚧 **Phase 2** — C2 Console: live map, triage queue, dispatch, analytics
 - ⬜ **Phase 3** — Mobile app: offline-first reporting, panic SOS
 - ⬜ **Phase 4** — USSD/SMS + Voice (Africa's Talking)
 - ⬜ **Phase 5** — Hardening: e2e tests, runbook, production Docker build

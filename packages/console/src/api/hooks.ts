@@ -219,3 +219,41 @@ export function useSops(category?: string) {
     queryFn: () => api.get(`/api/sops${category ? `?category=${category}` : ''}`),
   });
 }
+
+// ─── Users & Staff Management ────────────────────────────────────────────────
+
+export function useUsers(role?: string) {
+  return useQuery<any[]>({
+    queryKey: ['users', role],
+    queryFn: () => api.get(`/api/users${role ? `?role=${role}` : ''}`),
+  });
+}
+
+export function useCreateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: {
+      phone: string;
+      password: string;
+      name: string;
+      role: string;
+      agency?: string;
+      lgaId?: string;
+    }) => api.post('/api/users', dto),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useToggleUserActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
+      api.patch(`/api/users/${userId}/active`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+

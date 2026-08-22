@@ -2,17 +2,20 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import { useLogout, useDashboardKpis } from '../api/hooks';
 import { useAlarmStore } from '../store/alarms';
+import { launchMonitorWindow } from '../lib/monitor';
 import AlarmTicker from './AlarmTicker';
 
 const navItems = [
   { to: '/app', label: 'Operations HUD', icon: '📊', end: true },
-  { to: '/c2', label: 'C2 Video Wall', icon: '🖥️' },
+  { to: '/c2', label: 'C2 Video Wall ↗', icon: '🖥️', popup: true },
+  { to: '/systems', label: 'Monitoring Systems', icon: '🎛️' },
   { to: '/map', label: 'Live Radar Map', icon: '🗺️' },
   { to: '/triage', label: 'Triage Queue', icon: '📋' },
   { to: '/intel', label: 'Field Intel Feed', icon: '📡' },
   { to: '/playbook', label: 'Playbook Engine', icon: '⚡' },
   { to: '/responders', label: 'Force Readiness', icon: '🛡️' },
   { to: '/analytics', label: 'Situation Reports', icon: '📈' },
+  { to: '/staff', label: 'Personnel & Staff', icon: '👤' },
   { to: '/', label: 'Public Portal ↗', icon: '🌐' },
 ];
 
@@ -66,37 +69,51 @@ export default function Layout() {
             <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 font-mono">
               Command Modules
             </div>
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-transparent text-orange-400 border-l-2 border-orange-500 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border-l-2 border-transparent'
-                  }`
-                }
-              >
-                <span className="flex items-center gap-2.5">
-                  <span className="text-sm">{item.icon}</span>
-                  <span>{item.label}</span>
-                </span>
-
-                {item.to === '/triage' && kpis && kpis.openIncidents > 0 && (
-                  <span className="bg-red-500/20 border border-red-500/40 text-red-400 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                    {kpis.openIncidents}
+            {navItems.map((item) =>
+              item.popup ? (
+                <button
+                  key={item.to}
+                  onClick={() => launchMonitorWindow()}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-850 border-l-2 border-transparent text-left"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-sm">{item.icon}</span>
+                    <span>{item.label}</span>
                   </span>
-                )}
-
-                {item.to === '/' && unackCount > 0 && (
-                  <span className="bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full">
-                    {unackCount}
+                  <span className="text-[9px] mono text-orange-400/70">NEW WIN</span>
+                </button>
+              ) : (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-transparent text-orange-400 border-l-2 border-orange-500 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border-l-2 border-transparent'
+                    }`
+                  }
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-sm">{item.icon}</span>
+                    <span>{item.label}</span>
                   </span>
-                )}
-              </NavLink>
-            ))}
+
+                  {item.to === '/triage' && kpis && kpis.openIncidents > 0 && (
+                    <span className="bg-red-500/20 border border-red-500/40 text-red-400 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                      {kpis.openIncidents}
+                    </span>
+                  )}
+
+                  {item.to === '/' && unackCount > 0 && (
+                    <span className="bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full">
+                      {unackCount}
+                    </span>
+                  )}
+                </NavLink>
+              ),
+            )}
           </nav>
 
           {/* Quick Threat Level Matrix */}

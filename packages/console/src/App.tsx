@@ -14,6 +14,9 @@ import RespondersPage from './pages/Responders';
 import SituationMonitor from './pages/SituationMonitor';
 import C2VideoWall from './pages/C2VideoWall';
 import PlaybookEngine from './pages/PlaybookEngine';
+import StaffManagementPage from './pages/StaffManagement';
+import MonitoringHub from './pages/MonitoringHub';
+import MonitoringSystem from './pages/MonitoringSystem';
 
 function ProtectedLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -45,6 +48,9 @@ export default function App() {
       <Route path="/c2" element={<ProtectedRoute><C2VideoWall /></ProtectedRoute>} />
       <Route path="/monitor" element={<ProtectedRoute><SituationMonitor /></ProtectedRoute>} />
 
+      {/* Monitoring system display windows — one system per window */}
+      <Route path="/systems/:systemId" element={<ProtectedRoute><MonitoringSystem /></ProtectedRoute>} />
+
       {/* Authenticated C2 Situation Room Console */}
       <Route element={<ProtectedLayout />}>
         <Route path="/app" element={<OperationsDashboard />} />
@@ -55,6 +61,8 @@ export default function App() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/responders" element={<RespondersPage />} />
         <Route path="/playbook" element={<PlaybookEngine />} />
+        <Route path="/staff" element={<StaffManagementPage />} />
+        <Route path="/systems" element={<MonitoringHub />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

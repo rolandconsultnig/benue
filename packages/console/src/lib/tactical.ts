@@ -72,6 +72,13 @@ export function computeDefcon(
 }
 
 // ─── Composite Risk Index ─────────────────────────────────────────────────────
+
+/** Benue South Senatorial District (Zone C) display frame — [lat, lng] corners. */
+export const BENUE_SOUTH_BOUNDS: [number, number][] = [
+  [6.82, 7.64],
+  [7.66, 8.49],
+];
+
 // Per the spec: CRI = w1*Severity + w2*Density + w3*Credibility + w4*Vulnerability
 
 export function computeCRI(params: {

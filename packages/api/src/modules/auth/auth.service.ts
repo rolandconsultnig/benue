@@ -12,6 +12,7 @@ import { PrismaService } from '../../prisma.service';
 import type { AuthSession, AuthUser } from '@cewers/shared';
 import type { Role } from '@cewers/shared';
 import { LoginDto, RegisterDto, RefreshDto } from './dto/auth.dto';
+import { normalizePhone, getPhoneVariants } from '../../common/utils/phone';
 
 @Injectable()
 export class AuthService {
@@ -22,18 +23,25 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthSession> {
-    const existing = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const normalizedPhone = normalizePhone(dto.phone);
+    const variants = getPhoneVariants(dto.phone);
+
+    const existing = await this.prisma.user.findFirst({
+      where: { phone: { in: variants } },
+    });
     if (existing) throw new ConflictException('A user with this phone number already exists');
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const cleanPassword = dto.password.trim();
+    const passwordHash = await bcrypt.hash(cleanPassword, 10);
     const user = await this.prisma.user.create({
       data: {
-        phone: dto.phone,
-        name: dto.name,
+        phone: normalizedPhone,
+        name: dto.name.trim(),
         passwordHash,
         role: (dto.role ?? 'CITIZEN') as Role,
-        agency: dto.agency,
-        lgaId: dto.lgaId,
+        agency: dto.agency || null,
+        lgaId: dto.lgaId || null,
+        isActive: true,
       },
     });
 
@@ -41,10 +49,16 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthSession> {
-    const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const rawPhone = dto.phone ? dto.phone.trim() : '';
+    const variants = getPhoneVariants(rawPhone);
+
+    const user = await this.prisma.user.findFirst({
+      where: { phone: { in: variants } },
+    });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const ok = await bcrypt.compare(dto.password, user.passwordHash);
+    const cleanPassword = dto.password ? dto.password.trim() : '';
+    const ok = await bcrypt.compare(cleanPassword, user.passwordHash);
     if (!ok) throw new UnauthorizedException('Invalid credentials');
     if (!user.isActive) throw new UnauthorizedException('Account is deactivated');
 

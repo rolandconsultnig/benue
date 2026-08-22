@@ -14,6 +14,7 @@ import type {
   IncidentCategory,
   IncidentEventType,
   IncidentStatus,
+  MediaType,
   Priority,
   ResponderStatus,
   ResponderType,
@@ -148,11 +149,25 @@ export type IncidentEvent = {
 
 export type MediaAsset = {
   id: string;
-  type: 'IMAGE' | 'VIDEO' | 'AUDIO';
+  type: MediaType;
   storageKey: string;
   url: string;
   geo: GeoPoint | null;
   createdAt: string;
+};
+
+export type CreateMediaAssetDto = {
+  type: MediaType;
+  mimeType: string;
+  sizeBytes: number;
+  geo?: GeoPoint;
+};
+
+export type PresignedUpload = {
+  id: string;
+  storageKey: string;
+  url: string;
+  expiresAt: string;
 };
 
 export type IncidentQuery = {

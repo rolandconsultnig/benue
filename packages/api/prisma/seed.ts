@@ -91,7 +91,6 @@ async function seedLgas() {
         capital: lga.capital,
         state: lga.state,
         populationEstimate: lga.populationEstimate,
-        centroid: undefined as never, // set via raw SQL below
       },
     });
     await setLgaCentroid(lga.code, lga.centroid.lng, lga.centroid.lat);
@@ -102,7 +101,6 @@ async function seedLgas() {
       update: {},
       create: {
         name: `${lga.name} Mini Command Centre`,
-        location: undefined as never,
         isOperational: lga.code === 'OTUKPO', // Otukpo commissioned first as pilot
         commissionedAt: lga.code === 'OTUKPO' ? new Date('2024-01-15') : null,
         lga: { connect: { code: lga.code } },
@@ -131,7 +129,6 @@ async function seedWards() {
         code: ward.code,
         name: ward.name,
         lgaId,
-        centroid: undefined as never,
       },
     });
     await setWardCentroid(ward.code, ward.centroid.lng, ward.centroid.lat);
@@ -228,7 +225,6 @@ async function seedResponders() {
           agency: v.agency,
           lgaId: lga.id,
           status: 'ACTIVE',
-          geo: undefined as never,
         },
       });
     }
@@ -252,7 +248,6 @@ async function seedResponders() {
           status: ResponderStatus.AVAILABLE,
           lgaId: lga.id,
           vehicleId: vehicle?.id ?? null,
-          geo: undefined as never,
         },
       });
     }
@@ -346,7 +341,6 @@ async function seedSampleIncidents() {
           'Patrol confirmed the situation on arrival.',
           'CFP reports suspicious movement near the water point.',
         ])}`,
-        geo: undefined as never,
         channel,
         lgaId: lga.id,
         wardId: ward.id,
@@ -405,15 +399,21 @@ async function main() {
   console.log('\n🌱 CEWERS Database Seed\n' + '='.repeat(40));
 
   // Allow Prisma to insert rows before setting raw PostGIS coordinates
-  try {
-    await prisma.$executeRawUnsafe(`
-      ALTER TABLE "Lga" ALTER COLUMN "centroid" DROP NOT NULL;
-      ALTER TABLE "Ward" ALTER COLUMN "centroid" DROP NOT NULL;
-      ALTER TABLE "MiniCommandCentre" ALTER COLUMN "location" DROP NOT NULL;
-      ALTER TABLE "Incident" ALTER COLUMN "geo" DROP NOT NULL;
-    `);
-  } catch (err) {
-    // Ignore if already dropped
+  const alterStatements = [
+    'ALTER TABLE "Lga" ALTER COLUMN "centroid" DROP NOT NULL',
+    'ALTER TABLE "Ward" ALTER COLUMN "centroid" DROP NOT NULL',
+    'ALTER TABLE "MiniCommandCentre" ALTER COLUMN "location" DROP NOT NULL',
+    'ALTER TABLE "Incident" ALTER COLUMN "geo" DROP NOT NULL',
+    'ALTER TABLE "Vehicle" ALTER COLUMN "geo" DROP NOT NULL',
+    'ALTER TABLE "Responder" ALTER COLUMN "geo" DROP NOT NULL',
+  ];
+
+  for (const sql of alterStatements) {
+    try {
+      await prisma.$executeRawUnsafe(sql);
+    } catch (err) {
+      // Ignore if column doesn't exist or already nullable
+    }
   }
 
   await seedLgas();
